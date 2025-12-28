@@ -28,8 +28,8 @@ define AESD_ASSIGNMENTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -m 0644 $(@D)/conf/* $(TARGET_DIR)/usr/bin/conf/
 
 	# 2. Copiamos TODO a /root de forma que no falle
-	$(INSTALL) -d $(TARGET_DIR)/root/
-	cp -rn $(@D)/* $(TARGET_DIR)/root/
+	#$(INSTALL) -d $(TARGET_DIR)/root/
+	#cp -rn $(@D)/* $(TARGET_DIR)/root/
 endef
 
 $(eval $(generic-package))
