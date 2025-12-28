@@ -1,0 +1,14 @@
+#!/bin/sh
+case "$1" in
+  start)
+    echo "Configurando red y SSH..."
+    # Asegurar que las llaves existan
+    if [ ! -f /etc/dropbear/dropbear_rsa_host_key ]; then
+        mkdir -p /etc/dropbear
+        dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
+    fi
+    # Dropbear arrancará solo si está habilitado en Buildroot, 
+    # pero esto asegura que la red esté lista antes.
+    /sbin/ifup -a
+    ;;
+esac
