@@ -1,0 +1,152 @@
+
+
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          lddmodules
+# Required-Start:    $local_fs $modules
+# Required-Stop:     $local_fs $modules
+# Default-Start:     S
+# Default-Stop:      0 6
+# Short-Description: Load/unload LDD3 example modules
+### END INIT INFO
+
+SCULL_NDEVS=${SCULL_NDEVS:-4}
+
+device="scull"
+module="scull"
+mode="666"
+
+create_scull_nodes() {
+    insmod "/lib/modules/6.6.84/updates/${module}.ko" || exit 1
+
+    rm -f /dev/${device}[0-9]*
+    major="$(awk '$2=="scull"{print $1}' /proc/devices)"
+    [ -z "$major" ] && echo "scull major not found in /proc/devices" && return 1
+    i=0
+    while [ $i -lt "$SCULL_NDEVS" ]; do
+        mknod -m 666 /dev/${device}$i c "$major" "$i" 2>/dev/null || true
+        i=$((i+1))
+    done
+    ln -sf ${device}0 /dev/${device}
+    chmod $mode  /dev/${device}[0-9]*
+    rm -f /dev/${device}pipe[0-3]
+    i=0
+    while [ $i -lt "$SCULL_NDEVS" ]; do
+        mknod -m 666 /dev/${device}pipe$i c "$major" "$((i+4))" 2>/dev/null || true
+        i=$((i+1))
+    done
+
+    ln -sf ${device}pipe0 /dev/${device}pipe
+    chmod $mode  /dev/${device}pipe[0-9]*
+
+    rm -f /dev/${device}single
+    mknod /dev/${device}single  c $major 8
+    chmod $mode  /dev/${device}single
+
+    rm -f /dev/${device}uid
+    mknod /dev/${device}uid   c $major 9
+    chmod $mode  /dev/${device}uid
+
+    rm -f /dev/${device}wuid
+    mknod /dev/${device}wuid  c $major 10
+    chmod $mode  /dev/${device}wuid
+
+    rm -f /dev/${device}priv
+    mknod /dev/${device}priv  c $major 11
+    chmod $mode  /dev/${device}priv
+}
+
+remove_scull_nodes() {
+    rmmod $module || exit 1
+    rm -f /dev/${device} /dev/${device}[0-3] 
+    rm -f /dev/${device}priv
+    rm -f /dev/${device}pipe /dev/${device}pipe[0-3]
+    rm -f /dev/${device}single
+    rm -f /dev/${device}uid
+    rm -f /dev/${device}wuid
+}
+
+faulty_module="faulty"
+faulty_device="faulty"
+group="root"
+mode="660"  
+create_faulty_nodes() {
+    insmod "/lib/modules/6.6.84/updates/${faulty_module}.ko" || exit 1
+    echo "Get the major number (allocated with allocate_chrdev_region) from /proc/devices"
+    major=$(awk "\$2==\"$faulty_module\" {print \$1}" /proc/devices)
+    if [ ! -z ${major} ]; then
+        echo "Remove any existing /dev node for /dev/${device}"
+        rm -f /dev/${faulty_device}
+        echo "Add a node for our device at /dev/${device} using mknod"
+        mknod /dev/${faulty_device} c $major 0
+        echo "Change group owner to ${group}"
+        chgrp $group /dev/${faulty_device}
+        echo "Change access mode to ${mode}"
+        chmod $mode  /dev/${faulty_device}
+    else
+        echo "No device found in /proc/devices for driver ${faulty_module} (this driver may not allocate a device)"
+    fi
+}
+
+remove_faulty_nodes() {
+    rmmod $faulty_module || exit 1
+    rm -f /dev/${faulty_device}
+}
+
+hello_module="hello"
+hello_device="hello" 
+create_hello_nodes() {
+    insmod "/lib/modules/6.6.84/updates/${hello_module}.ko" || exit 1
+    echo "Get the major number (allocated with allocate_chrdev_region) from /proc/devices"
+    major=$(awk "\$2==\"$hello_module\" {print \$1}" /proc/devices)
+    if [ ! -z ${major} ]; then
+        echo "Remove any existing /dev node for /dev/${hello_device}"
+        rm -f /dev/${hello_device}
+        echo "Add a node for our device at /dev/${device} using mknod"
+        mknod /dev/${hello_device} c $major 0
+        echo "Change group owner to ${group}"
+        chgrp $group /dev/${hello_device}
+        echo "Change access mode to ${mode}"
+        chmod $mode  /dev/${hello_device}
+    else
+        echo "No device found in /proc/devices for driver ${hello_module} (this driver may not allocate a device)"
+    fi
+}
+
+remove_hello_nodes() {
+    rmmod $hello_module || exit 1
+    rm -f /dev/${hello_device}
+}
+
+case "$1" in
+  start)
+    echo "[ldd] Loading scull..."
+    create_scull_nodes || true
+
+    echo "[ldd] Loading faulty..."
+    create_faulty_nodes || true
+
+    echo "[ldd] Loading hello..."
+    modprobe "/lib/modules/6.6.84/updates/${hello_module}.ko" || true
+    ;;
+  stop)
+    echo "[ldd] Unloading hello..."
+    remove_hello_nodes
+
+    echo "[ldd] Unloading faulty..."
+    remove_faulty_nodes
+
+    echo "[ldd] Unloading scull..."
+    remove_scull_nodes
+    ;;
+  restart)
+    "$0" stop
+    "$0" start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+    ;;
+esac
+
+exit 0

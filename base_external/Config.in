@@ -1,1 +1,4 @@
 source "$BR2_EXTERNAL_BASE_EXTERNAL_PATH/package/aesd-assignments/Config.in"
+source "$BR2_EXTERNAL_BASE_EXTERNAL_PATH/package/ldd/Config.in"
+source "$BR2_EXTERNAL_BASE_EXTERNAL_PATH/package/misc-modules/Config.in"
+source "$BR2_EXTERNAL_BASE_EXTERNAL_PATH/package/scull/Config.in"
