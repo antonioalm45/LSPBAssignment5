@@ -127,7 +127,7 @@ case "$1" in
     create_faulty_nodes || true
 
     echo "[ldd] Loading hello..."
-    modprobe "/lib/modules/6.6.84/updates/${hello_module}.ko" || true
+    modprobe "${hello_module}" || true
     ;;
   stop)
     echo "[ldd] Unloading hello..."
