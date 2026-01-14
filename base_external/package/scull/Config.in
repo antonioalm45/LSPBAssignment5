@@ -1,5 +1,0 @@
-config BR2_PACKAGE_SCULL
-    bool "scull"
-    depends on BR2_LINUX_KERNEL
-    help
-      Asignación 7 del curso.
