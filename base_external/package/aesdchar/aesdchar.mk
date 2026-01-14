@@ -6,13 +6,13 @@
 ##############################################################
 
 #TODO: Fill up the contents below in order to reference your assignment 3 git contents
-AESD_ASSIGNMENTS_VERSION = 'cd0836e529a655f3f78e636f466691cbe09e38a8'
+AESDCHAR_VERSION = '2fd4b9a3713578d9aca3b4729bf783919c6c638a'
 # Note: Be sure to reference the *ssh* repository URL here (not https) to work properly
 # with ssh keys and the automated build/test system.
 # Your site should start with git@github.com:
 AESDCHAR_SITE = 'git@github.com:antonioalm45/LSPBAssignment3.git'
-AESDCHAR_ASSIGNMENTS_SITE_METHOD = git
-AESDCHAR_ASSIGNMENTS_GIT_SUBMODULES = YES
+AESDCHAR_SITE_METHOD = git
+AESDCHAR_GIT_SUBMODULES = YES
 
 # ------------- Parte de kernel module (out-of-tree) -------------
 # Indica el/los subdirectorios donde hay un Makefile de módulo (Kbuild)

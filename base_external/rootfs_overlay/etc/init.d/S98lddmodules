@@ -118,6 +118,31 @@ remove_hello_nodes() {
     rm -f /dev/${hello_device}
 }
 
+aesdchar_module="aesdchar"
+aesdchar_device="aesdchar"
+create_aesdchar_nodes() {
+    insmod "/lib/modules/6.6.84/updates/${aesdchar_module}.ko" || exit 1
+    echo "Get the major number (allocated with allocate_chrdev_region) from /proc/devices"
+    major=$(awk "\$2==\"$aesdchar_module\" {print \$1}" /proc/devices)
+    if [ ! -z ${major} ]; then
+        echo "Remove any existing /dev node for /dev/${aesdchar_device}"
+        rm -f /dev/${aesdchar_device}
+        echo "Add a node for our device at /dev/${aesdchar_device} using mknod"
+        mknod /dev/${aesdchar_device} c $major 0
+        echo "Change group owner to ${group}"
+        chgrp $group /dev/${aesdchar_device}
+        echo "Change access mode to ${mode}"
+        chmod $mode  /dev/${aesdchar_device}
+    else
+        echo "No device found in /proc/devices for driver ${aesdchar_module} (this driver may not allocate a device)"
+    fi
+}
+
+remove_aesdchar_nodes() {
+    rmmod $aesdchar_module || exit 1
+    rm -f /dev/${aesdchar_device}
+}
+
 case "$1" in
   start)
     echo "[ldd] Loading scull..."
@@ -128,6 +153,9 @@ case "$1" in
 
     echo "[ldd] Loading hello..."
     modprobe "${hello_module}" || true
+    
+    echo "[ldd] Loading aesdchar..."
+    create_aesdchar_nodes || true
     ;;
   stop)
     echo "[ldd] Unloading hello..."
@@ -138,6 +166,9 @@ case "$1" in
 
     echo "[ldd] Unloading scull..."
     remove_scull_nodes
+
+    echo "[ldd] Unloading aesdchar..."
+    remove_aesdchar_nodes
     ;;
   restart)
     "$0" stop
